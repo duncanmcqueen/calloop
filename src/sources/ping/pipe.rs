@@ -28,11 +28,23 @@ fn make_ends() -> std::io::Result<(OwnedFd, OwnedFd)> {
     Ok((read, write))
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "haiku")))]
 #[inline]
 fn make_ends() -> std::io::Result<(OwnedFd, OwnedFd)> {
     use rustix::pipe::{pipe_with, PipeFlags};
     Ok(pipe_with(PipeFlags::CLOEXEC | PipeFlags::NONBLOCK)?)
+}
+
+#[cfg(target_os = "haiku")]
+fn make_ends() -> std::io::Result<(OwnedFd, OwnedFd)> {
+    use rustix::fs::{OFlags, fcntl_getfl, fcntl_setfl};
+    use rustix::io::{FdFlags, fcntl_getfd, fcntl_setfd};
+    let (read, write) = rustix::pipe::pipe()?;
+    for fd in [&read, &write] {
+        fcntl_setfd(fd, fcntl_getfd(fd)? | FdFlags::CLOEXEC)?;
+        fcntl_setfl(fd, fcntl_getfl(fd)? | OFlags::NONBLOCK)?;
+    }
+    Ok((read, write))
 }
 
 #[inline]

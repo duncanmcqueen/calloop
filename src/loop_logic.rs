@@ -669,7 +669,7 @@ impl<'l, Data> EventLoop<'l, Data> {
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "haiku")))]
 impl<'l, Data> AsRawFd for EventLoop<'l, Data> {
     /// Get the underlying raw-fd of the poller.
     ///
@@ -683,7 +683,7 @@ impl<'l, Data> AsRawFd for EventLoop<'l, Data> {
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "haiku")))]
 impl<'l, Data> AsFd for EventLoop<'l, Data> {
     /// Get the underlying fd of the poller.
     ///
